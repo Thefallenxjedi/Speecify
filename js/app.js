@@ -149,10 +149,14 @@ function initElements() {
     reportTranscriptText: document.getElementById('report-transcript-text'),
     
     // Exports
+    btnTranscribeGemini: document.getElementById('btn-transcribe-gemini'),
     btnCopyTranscript: document.getElementById('btn-copy-transcript'),
     btnPdfReport: document.getElementById('btn-pdf-report'),
     btnEmailReport: document.getElementById('btn-email-report'),
     btnDownloadAudio: document.getElementById('btn-download-audio'),
+    
+    // Status Text helper
+    recordActionSubtext: document.getElementById('record-action-subtext'),
     
     // Modals
     settingsModal: document.getElementById('settings-modal'),
@@ -264,6 +268,59 @@ async function setupAudioAndRecognition() {
     console.log('Pause registered, total pauses:', count);
   };
 
+  audioPipeline.onGainUpdate = (db) => {
+    if (!state.isRecording || state.isPaused) return;
+    const dbPct = Math.max(0, Math.min(100, ((db + 60) / 60) * 100));
+    
+    // Update volume track bars
+    document.querySelectorAll('.live-vol-fill').forEach(fill => {
+      fill.style.width = `${dbPct}%`;
+    });
+    
+    // Update volume text values
+    const volStr = `${db.toFixed(1)} dB`;
+    const volTextDashboard = document.getElementById('live-vol-text');
+    const volTextCoach = document.getElementById('coach-live-vol-text');
+    if (volTextDashboard) volTextDashboard.textContent = volStr;
+    if (volTextCoach) volTextCoach.textContent = volStr;
+  };
+
+  audioPipeline.onPitchUpdate = (hz) => {
+    if (!state.isRecording || state.isPaused || hz <= 0) return;
+    
+    // Map Hz (70Hz - 400Hz) to horizontal percentage: ((hz - 70) / (400 - 70)) * 100
+    let hzPct = ((hz - 70) / (400 - 70)) * 100;
+    hzPct = Math.max(0, Math.min(100, hzPct)); // clamp
+    
+    // Update pitch indicators
+    document.querySelectorAll('.live-pitch-indicator').forEach(ind => {
+      ind.style.left = `${hzPct}%`;
+    });
+    
+    // Display current frequency values
+    const pitchStr = `${hz.toFixed(0)} Hz`;
+    const pitchTextDashboard = document.getElementById('live-pitch-text');
+    const pitchTextCoach = document.getElementById('coach-live-pitch-text');
+    if (pitchTextDashboard) pitchTextDashboard.textContent = pitchStr;
+    if (pitchTextCoach) pitchTextCoach.textContent = pitchStr;
+    
+    // Classify vocal register in real-time (Deep, Medium, High)
+    let register = 'Medium';
+    if (hz < 130) {
+      register = 'Deep (Chest)';
+    } else if (hz > 250) {
+      register = 'High (Head)';
+    } else {
+      register = 'Medium (Mixed)';
+    }
+    
+    // Update register text
+    const registerDashboard = document.getElementById('live-register-val');
+    const registerCoach = document.getElementById('coach-live-register-val');
+    if (registerDashboard) registerDashboard.textContent = register;
+    if (registerCoach) registerCoach.textContent = register;
+  };
+
   speechRecognition = new SpeechRecognitionManager();
   
   speechRecognition.onResult = (text, isFinal) => {
@@ -276,6 +333,39 @@ async function setupAudioAndRecognition() {
       renderClickableText(elements.liveTranscript, text);
       elements.liveTranscript.scrollTop = elements.liveTranscript.scrollHeight;
     }
+
+    // Calculate dynamic Pace (WPM)
+    const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+    const elapsedMinutes = audioPipeline.getDuration() / 60;
+    let wpm = 0;
+    if (elapsedMinutes > 0) {
+      wpm = Math.round(wordCount / elapsedMinutes);
+    }
+    
+    // Detect and count Filler Words
+    const fillers = ['um', 'uh', 'like', 'so', 'ah', 'you know'];
+    let fillerCount = 0;
+    const cleanWords = text.toLowerCase().replace(/[\.,\?!;:"'\(\)\-—]/g, '').split(/\s+/).filter(w => w.length > 0);
+    cleanWords.forEach(w => {
+      if (fillers.includes(w)) {
+        fillerCount++;
+      }
+    });
+    const matchesYouKnow = (text.toLowerCase().match(/\byou know\b/g) || []).length;
+    fillerCount += matchesYouKnow;
+    
+    // Clarity Rating: starts at 98% and decreases by 3% per filler word
+    const clarity = Math.max(40, 98 - (fillerCount * 3));
+    
+    // Update metrics UI
+    const wpmValEls = document.querySelectorAll('.live-wpm-val');
+    wpmValEls.forEach(el => el.textContent = wpm > 0 ? wpm : '--');
+    
+    const fillersValEls = document.querySelectorAll('.live-fillers-val');
+    fillersValEls.forEach(el => el.textContent = fillerCount);
+    
+    const clarityValEls = document.querySelectorAll('.live-clarity-val');
+    clarityValEls.forEach(el => el.textContent = `${clarity}%`);
   };
 }
 
@@ -311,6 +401,11 @@ function setupEventListeners() {
   });
   elements.coachPauseBtn.addEventListener('click', togglePause);
   elements.coachStopBtn.addEventListener('click', finishRecording);
+  
+  // On-demand Gemini Transcription button in Report view
+  if (elements.btnTranscribeGemini) {
+    elements.btnTranscribeGemini.addEventListener('click', runOnDemandGeminiTranscription);
+  }
   
   // Discard/Save name modals
   elements.nameCancel.addEventListener('click', () => {
@@ -458,6 +553,10 @@ async function toggleRecording() {
       elements.statusBadge.classList.add('recording');
       elements.statusBadge.classList.remove('paused');
       elements.statusText.textContent = 'Recording';
+
+      if (elements.recordActionSubtext) {
+        elements.recordActionSubtext.textContent = '🎤 Recording... • Tap to Pause';
+      }
       
       pauseBtn.disabled = false;
       stopBtn.disabled = false;
@@ -510,6 +609,10 @@ function togglePause() {
       <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       Resume
     `;
+    
+    if (elements.recordActionSubtext) {
+      elements.recordActionSubtext.textContent = '⏸ Paused • Tap to Resume';
+    }
   } else {
     // Resume
     state.isPaused = false;
@@ -523,6 +626,10 @@ function togglePause() {
       <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
       Pause
     `;
+    
+    if (elements.recordActionSubtext) {
+      elements.recordActionSubtext.textContent = '🎤 Recording... • Tap to Pause';
+    }
   }
 }
 
@@ -530,6 +637,9 @@ async function finishRecording() {
   if (!state.isRecording) return;
   
   elements.statusText.textContent = 'Stopping...';
+  if (elements.recordActionSubtext) {
+    elements.recordActionSubtext.textContent = '⚡ transcribing audio...';
+  }
   
   // Stop recognition
   const localTranscript = speechRecognition.stop();
@@ -593,6 +703,33 @@ function resetRecordingUI() {
   elements.statusBadge.classList.remove('recording', 'paused');
   elements.statusText.textContent = 'Mic Ready';
   elements.settingsGear.disabled = false;
+
+  // Reset Telemetry & Metrics UI
+  if (elements.recordActionSubtext) {
+    elements.recordActionSubtext.textContent = 'Ready to Speak • Tap to Start';
+  }
+  
+  document.querySelectorAll('.live-vol-fill').forEach(fill => fill.style.width = '0%');
+  document.querySelectorAll('.live-pitch-indicator').forEach(ind => ind.style.left = '50%');
+  
+  const volTextDashboard = document.getElementById('live-vol-text');
+  const volTextCoach = document.getElementById('coach-live-vol-text');
+  if (volTextDashboard) volTextDashboard.textContent = '-- dB';
+  if (volTextCoach) volTextCoach.textContent = '-- dB';
+  
+  const pitchTextDashboard = document.getElementById('live-pitch-text');
+  const pitchTextCoach = document.getElementById('coach-live-pitch-text');
+  if (pitchTextDashboard) pitchTextDashboard.textContent = '-- Hz';
+  if (pitchTextCoach) pitchTextCoach.textContent = '-- Hz';
+  
+  const registerDashboard = document.getElementById('live-register-val');
+  const registerCoach = document.getElementById('coach-live-register-val');
+  if (registerDashboard) registerDashboard.textContent = '--';
+  if (registerCoach) registerCoach.textContent = '--';
+  
+  document.querySelectorAll('.live-wpm-val').forEach(el => el.textContent = '--');
+  document.querySelectorAll('.live-fillers-val').forEach(el => el.textContent = '--');
+  document.querySelectorAll('.live-clarity-val').forEach(el => el.textContent = '--');
 }
 
 // Save recording to IndexedDB & trigger transcription if needed
@@ -1110,7 +1247,11 @@ function loadReport(recording) {
   elements.evalPausesDesc.textContent = stats.pauseAdvice;
 
   // Transcript Box
-  elements.reportTranscriptText.value = recording.transcript;
+  if (!recording.transcript || recording.transcript === 'No transcript available.' || recording.transcript.trim() === '') {
+    elements.reportTranscriptText.value = 'No transcript available for this session. (Usually caused by iOS Safari microphone restrictions during visualizer streaming).\n\n👉 Click the "⚡ Transcribe with Gemini" button below to transcribe the saved audio blob directly from IndexedDB using Google Gemini!';
+  } else {
+    elements.reportTranscriptText.value = recording.transcript;
+  }
 
   // Practice Accuracy Badge Card
   if (recording.accuracy !== null && recording.accuracy !== undefined) {
@@ -1927,4 +2068,70 @@ function renderSyllableInspectorResult(word, data, containerEl) {
       </div>
     </div>
   `;
+}
+
+// Run on-demand Gemini transcription on currently selected recording
+async function runOnDemandGeminiTranscription() {
+  if (!state.selectedRecording) {
+    alert('Please select a recording from the sidebar to transcribe.');
+    return;
+  }
+  
+  // Check if we have an API key
+  if (!state.settings.apiKey) {
+    alert('To use Gemini transcription, please provide a valid Google Gemini API Key in Settings first.');
+    elements.settingsModal.classList.add('active');
+    return;
+  }
+  
+  const recording = state.selectedRecording;
+  
+  elements.spinnerStatus.textContent = 'Transcribing audio with Gemini 2.5 Flash...';
+  elements.apiSpinnerOverlay.classList.add('active');
+  
+  try {
+    const geminiTranscript = await speechRecognition.transcribeWithGemini(
+      recording.audioBlob,
+      state.settings.apiKey
+    );
+    
+    if (geminiTranscript) {
+      recording.transcript = geminiTranscript;
+      
+      // Calculate word count
+      const wordCount = geminiTranscript.split(/\s+/).filter(w => w.length > 0).length;
+      
+      // If accuracy was previously set (i.e. practice prompt run) or needs to be calculated
+      if (recording.practicePrompt) {
+        const diffResult = alignSpeech(recording.practicePrompt, geminiTranscript);
+        recording.accuracy = diffResult.accuracy;
+      }
+      
+      // Update WPM
+      const evalResult = evaluateSpeech(
+        recording.duration,
+        wordCount,
+        recording.avgPitch,
+        recording.pitchVariance,
+        recording.pauseCount
+      );
+      recording.wpm = evalResult.wpm;
+      
+      // Save updated recording record back to IndexedDB
+      await saveRecording(recording);
+      
+      // Refresh the sidebar to update list text
+      await refreshHistoryList();
+      
+      // Reload this updated report in Report View
+      loadReport(recording);
+      
+      alert('Speech transcription successfully generated using Gemini 2.5 Flash!');
+    }
+  } catch (err) {
+    console.error('On-demand Gemini transcription failed:', err);
+    alert('Gemini transcription failed: ' + err.message);
+  } finally {
+    elements.apiSpinnerOverlay.classList.remove('active');
+  }
 }

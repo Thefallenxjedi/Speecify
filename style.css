@@ -1418,3 +1418,117 @@ main {
   text-shadow: 0 0 6px rgba(6, 182, 212, 0.4);
 }
 
+/* Mobile & Tablet Responsive Media Queries */
+@media (max-width: 900px) {
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px 20px;
+    height: auto;
+    text-align: center;
+  }
+
+  .logo-section {
+    justify-content: center;
+  }
+
+  .nav-tabs {
+    justify-content: center;
+    width: 100%;
+    overflow-x: auto;
+    padding: 4px;
+  }
+
+  .tab-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .header-actions {
+    justify-content: center;
+    width: 100%;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  #warmup-btn {
+    margin-right: 0 !important;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-top: 1px solid var(--panel-border);
+    height: auto;
+    max-height: 350px;
+    overflow-y: auto;
+    background: rgba(2, 6, 23, 0.7);
+    order: 3; /* Push sidebar to bottom on mobile */
+  }
+
+  main {
+    padding: 16px;
+    height: auto;
+    overflow-y: visible;
+    order: 2; /* Put main content above the sidebar history */
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Coach Teleprompter box height and font sizing */
+  #coach-teleprompter-box {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    height: 120px !important;
+  }
+
+  /* Compact visualizers on smaller viewports */
+  .visualizer-canvas {
+    height: 110px !important;
+  }
+
+  #pitch-canvas {
+    height: 120px !important;
+  }
+
+  .warmup-box {
+    width: 95% !important;
+    padding: 14px !important;
+  }
+
+  #warmup-canvas {
+    height: 200px !important;
+  }
+
+  .modal-box {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+  }
+}
+
+

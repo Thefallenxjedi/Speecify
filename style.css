@@ -815,6 +815,8 @@ main {
   border: 1px solid rgba(255, 255, 255, 0.03);
   overflow-y: auto;
   white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .live-transcript-box:empty::before {
@@ -946,6 +948,8 @@ main {
   line-height: 1.8;
   color: var(--text-primary);
   margin-bottom: 20px;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .accuracy-diff-box:empty::before {

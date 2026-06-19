@@ -178,6 +178,13 @@ function initElements() {
     analyticsCanvas: document.getElementById('analytics-canvas'),
     reportAccuracyCard: document.getElementById('report-accuracy-card'),
     reportAccuracy: document.getElementById('report-accuracy'),
+    
+    // Report Accuracy & Diff elements
+    reportAccuracyPanel: document.getElementById('report-accuracy-panel'),
+    reportAccuracyScore: document.getElementById('report-accuracy-score'),
+    reportDiffResults: document.getElementById('report-diff-results'),
+    reportSyllableInspectorPanel: document.getElementById('report-syllable-inspector-panel'),
+    reportSyllableInspectorContent: document.getElementById('report-syllable-inspector-content'),
     warmupBtn: document.getElementById('warmup-btn'),
     warmupModal: document.getElementById('warmup-modal'),
     warmupClose: document.getElementById('warmup-close'),
@@ -485,6 +492,23 @@ function setupEventListeners() {
       speakAndInspectWord(cleanWordVal, span, 'coach');
     }
   });
+
+  if (elements.reportDiffResults) {
+    elements.reportDiffResults.addEventListener('click', (e) => {
+      const span = e.target.closest('.diff-word');
+      if (!span) return;
+      
+      let textToSpeak = span.textContent.trim();
+      if (span.classList.contains('diff-miss')) {
+        textToSpeak = textToSpeak.split('(got:')[0].trim();
+      }
+      
+      const cleanWordVal = textToSpeak.replace(/[\.,\?!;:"'\(\)\-—]/g, '').trim();
+      if (cleanWordVal) {
+        speakAndInspectWord(cleanWordVal, span, 'report');
+      }
+    });
+  }
 
   elements.coachTeleprompterBox.addEventListener('click', (e) => {
     const span = e.target.closest('.tele-word');
@@ -965,7 +989,38 @@ function startPracticePrompt() {
     finishRecording();
     return;
   }
-  if (!state.activePrompt) return;
+  
+  // If Custom Text panel is visible, check if we need to load text first
+  if (elements.customLyricsContainer && elements.customLyricsContainer.style.display === 'flex') {
+    const text = elements.customLyricsInput.value.trim();
+    if (!text) {
+      alert('Please paste some custom text first before starting practice.');
+      return;
+    }
+    
+    // Automatically load the custom text to set it as active prompt!
+    state.activePrompt = {
+      id: 999,
+      category: 'Custom Prompt / Lyrics',
+      prompt: text,
+      tips: 'Review your pasted custom text. Speak clearly and follow your own pacing!'
+    };
+    elements.promptCategory.textContent = state.activePrompt.category;
+    elements.promptTips.textContent = state.activePrompt.tips;
+    renderTeleprompter(text);
+    elements.diffResults.innerHTML = '';
+    elements.accuracyScore.textContent = '--%';
+    elements.coachAdvice.innerHTML = '';
+    
+    // Hide input container and show teleprompter
+    elements.customLyricsContainer.style.display = 'none';
+    elements.coachTeleprompterBox.style.display = 'block';
+  }
+
+  if (!state.activePrompt) {
+    alert('Please select a prompt or load custom text before starting practice.');
+    return;
+  }
   
   // Flag practice mode and context
   state.isCoachingPractice = true;
@@ -1259,6 +1314,27 @@ function loadReport(recording) {
     elements.reportAccuracy.textContent = `${Math.round(recording.accuracy)}%`;
   } else {
     elements.reportAccuracyCard.style.display = 'none';
+  }
+
+  // Toggle and load the Report Accuracy panel
+  if (recording.practicePrompt && recording.transcript && recording.transcript !== 'No transcript available.' && recording.transcript.trim() !== '') {
+    if (elements.reportAccuracyPanel && elements.reportDiffResults && elements.reportAccuracyScore) {
+      elements.reportAccuracyPanel.style.display = 'block';
+      const diffResult = alignSpeech(recording.practicePrompt, recording.transcript);
+      elements.reportDiffResults.innerHTML = diffResult.html;
+      elements.reportAccuracyScore.textContent = `${Math.round(diffResult.accuracy)}%`;
+      
+      // Reset report syllable content on load
+      if (elements.reportSyllableInspectorContent) {
+        elements.reportSyllableInspectorContent.innerHTML = `
+          <p style="font-style: italic; margin: 0; color: var(--text-secondary);">Click any word in the accuracy comparison diff above to inspect its syllables, phonetic guide, and word stress accent.</p>
+        `;
+      }
+    }
+  } else {
+    if (elements.reportAccuracyPanel) {
+      elements.reportAccuracyPanel.style.display = 'none';
+    }
   }
 }
 
@@ -1987,9 +2063,14 @@ async function speakAndInspectWord(word, span, targetContext = 'coach') {
   }, 150);
 
   // 3. Clear inspector container & show loading state
-  const targetContentEl = targetContext === 'dashboard' 
-    ? elements.dashSyllableInspectorContent 
-    : elements.syllableInspectorContent;
+  let targetContentEl;
+  if (targetContext === 'dashboard') {
+    targetContentEl = elements.dashSyllableInspectorContent;
+  } else if (targetContext === 'report') {
+    targetContentEl = elements.reportSyllableInspectorContent;
+  } else {
+    targetContentEl = elements.syllableInspectorContent;
+  }
 
   targetContentEl.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
@@ -1997,6 +2078,21 @@ async function speakAndInspectWord(word, span, targetContext = 'coach') {
       <span style="font-size: 12px; color: var(--cyan);">Analyzing "${word}" syllables...</span>
     </div>
   `;
+
+  // Scroll to active inspector panel on mobile
+  if (window.innerWidth < 768) {
+    let panel;
+    if (targetContext === 'dashboard') {
+      panel = elements.dashSyllableInspectorPanel;
+    } else if (targetContext === 'report') {
+      panel = elements.reportAccuracyPanel; // Scroll to the accuracy card containing the nested inspector
+    } else {
+      panel = elements.syllableInspectorPanel;
+    }
+    if (panel) {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
 
   const cleanWord = word.toLowerCase().trim();
   const handleResult = (data) => {

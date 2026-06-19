@@ -471,6 +471,35 @@
           <canvas id="analytics-canvas" class="visualizer-canvas" style="height: 180px;" width="1200" height="180"></canvas>
         </div>
 
+        <!-- Report Accuracy Comparison Panel (Only shown for practice runs) -->
+        <div id="report-accuracy-panel" class="glass-panel accuracy-panel" style="display: none; margin-bottom: 24px; border-color: rgba(168, 85, 247, 0.25);">
+          <div class="accuracy-score-header">
+            <h3 class="panel-title" style="color: var(--purple);">Speech Accuracy Comparison</h3>
+            <div id="report-accuracy-score" class="accuracy-percent" style="color: var(--purple); text-shadow: 0 0 10px rgba(168,85,247,0.3);">--%</div>
+          </div>
+          <div id="report-diff-results" class="accuracy-diff-box" style="min-height: 80px;" tabindex="0"></div>
+          
+          <!-- Key legend -->
+          <div style="display: flex; gap: 14px; font-size: 11px; flex-wrap: wrap; margin-bottom: 20px;">
+            <span style="color: var(--green);"><strong style="text-shadow: 0 0 4px rgba(16,185,129,0.4);">⬤</strong> Correct</span>
+            <span style="color: var(--red);"><strong style="text-shadow: 0 0 4px rgba(239,68,68,0.4);">⬤</strong> Omitted</span>
+            <span style="color: var(--yellow);"><strong>⬤</strong> Filler/Extra</span>
+            <span style="color: var(--orange);"><strong>⬤</strong> Substitution</span>
+          </div>
+
+          <!-- Report Syllable & Stress Inspector (Nested to keep it compact!) -->
+          <div id="report-syllable-inspector-panel" class="syllable-panel" style="border-top: 1px dashed var(--panel-border); padding-top: 16px; margin-top: 16px;">
+            <div class="panel-header" style="margin-bottom: 8px;">
+              <h4 class="panel-title" style="display:flex; align-items:center; gap:6px; font-size: 13px; color: var(--purple);">
+                🗣️ Report Syllable & Accent Inspector
+              </h4>
+            </div>
+            <div id="report-syllable-inspector-content" class="syllable-inspector-content" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; min-height: 60px;">
+              <p style="font-style: italic; margin: 0; color: var(--text-secondary);">Click any word in the accuracy comparison diff above to inspect its syllables, phonetic guide, and word stress accent.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Full Transcript Box -->
         <div class="glass-panel report-transcript-panel">
           <div class="panel-header">

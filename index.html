@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoxLyze — Premium Real-time Voice Analyzer & Speech Coach</title>
+  <meta name="description" content="A futuristic client-side voice analyzer and interactive speech coach application styled with rich glassmorphism aesthetics.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- HEADER -->
+    <header>
+      <div class="logo-section">
+        <div class="logo-icon">
+          <!-- Waveform SVG -->
+          <svg viewBox="0 0 24 24">
+            <path d="M4 9h2v6H4zm3-4h2v14H7zm3 6h2v2h-2zm3-3h2v8h-2zm3-2h2v12h-2zm3 4h2v6h-2z" />
+          </svg>
+        </div>
+        <h1>VoxLyze</h1>
+      </div>
+      
+      <!-- NAV TABS -->
+      <nav class="nav-tabs">
+        <button id="tab-btn-dashboard" class="tab-btn active" data-view="dashboard">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          Dashboard
+        </button>
+        <button id="tab-btn-coach" class="tab-btn" data-view="speech-coach">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+          Speech Coach
+        </button>
+        <button id="tab-btn-report" class="tab-btn" data-view="speech-report">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/></svg>
+          Speech Report
+        </button>
+      </nav>
+
+      <!-- STATUS & SETTINGS -->
+      <div class="header-actions">
+        <button id="warmup-btn" class="coach-btn warmup-btn" title="Vocal Pitch Warm Up" style="margin-right: 12px; padding: 6px 14px; font-size: 12px; border: 1px solid var(--purple); color: var(--purple); border-radius: 6px; background: rgba(168, 85, 247, 0.05); display: flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s ease;">
+          <span style="font-size: 13px;">🎮</span> Warm Up
+        </button>
+        <div id="status-badge" class="status-badge">
+          <div class="status-dot"></div>
+          <span id="status-text">Mic Ready</span>
+        </div>
+        <button id="settings-gear" class="settings-btn" title="Open Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- SIDEBAR: RECORDING HISTORY -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--cyan)"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+          Recordings
+        </h2>
+        <span id="tracks-badge" class="tracks-count">0</span>
+      </div>
+      <div id="history-list" class="history-list">
+        <!-- Empty state placeholder (rendered when no recordings exist) -->
+        <div id="history-empty" class="empty-state">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+          <p>No voice recordings saved yet. Click the record button on the Dashboard to get started.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN DYNAMIC CONTENT -->
+    <main>
+      
+      <!-- VIEW 1: DASHBOARD -->
+      <section id="view-dashboard" class="view-section active">
+        <div class="grid-2">
+          
+          <!-- Recording Console -->
+          <div class="glass-panel console-panel">
+            <div class="record-ring-wrapper">
+              <div class="pulse-ring"></div>
+              <button id="record-btn" class="record-btn" aria-label="Start Recording" title="Start Recording">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9"/>
+                </svg>
+              </button>
+            </div>
+            
+            <div id="timer-display" class="timer-display">00:00.0</div>
+            
+            <div class="console-actions">
+              <button id="pause-btn" class="console-btn pause-btn" disabled>
+                <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                Pause
+              </button>
+              <button id="stop-btn" class="console-btn stop-btn" disabled>
+                <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                Finish
+              </button>
+            </div>
+          </div>
+
+          <!-- Oscilloscope & Spectrum visualizer -->
+          <div class="glass-panel visualizer-panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Waveform & Frequencies</h3>
+            </div>
+            <canvas id="visualizer-canvas" class="visualizer-canvas" width="600" height="160"></canvas>
+          </div>
+
+        </div>
+
+        <!-- Scrolling Pitch Timeline -->
+        <div class="glass-panel visualizer-panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Live Vocal Pitch (Hz)</h3>
+          </div>
+          <canvas id="pitch-canvas" class="visualizer-canvas" width="1200" height="200"></canvas>
+        </div>
+
+        <!-- Live Transcription & Syllable Inspector Grid -->
+        <div class="grid-2" style="margin-top: 24px;">
+          <!-- Live Transcription Pane -->
+          <div class="glass-panel transcription-panel" style="margin: 0;">
+            <div class="panel-header">
+              <h3 class="panel-title">Live Speech Transcription (Click words to inspect)</h3>
+            </div>
+            <div id="live-transcript" class="live-transcript-box" tabindex="0" style="height: 150px; overflow-y: auto;"></div>
+          </div>
+
+          <!-- Dashboard Syllable Inspector Panel -->
+          <div id="dash-syllable-inspector-panel" class="glass-panel syllable-panel" style="margin: 0; border-color: rgba(168, 85, 247, 0.15);">
+            <div class="panel-header">
+              <h3 class="panel-title" style="display:flex; align-items:center; gap:6px;">
+                🗣️ Dashboard Syllable & Stress Inspector
+              </h3>
+            </div>
+            <div id="dash-syllable-inspector-content" class="syllable-inspector-content" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; min-height: 80px;">
+              <p style="font-style: italic; margin: 0; color: var(--text-secondary);">Click any word in your live transcript after speaking to inspect its syllables, IPA pronunciation, and stress accent.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: SPEECH COACH -->
+      <section id="view-speech-coach" class="view-section">
+        
+        <!-- Practice Prompt Card -->
+        <div class="glass-panel prompt-card">
+          <div class="badge-row">
+            <span id="prompt-category" class="category-badge">Job Interview</span>
+            <span class="panel-title" style="font-size: 11px;">Active Prompt</span>
+          </div>
+          <!-- Teleprompter Container -->
+          <div id="coach-teleprompter-box" style="height: 140px; overflow-y: auto; font-family: var(--font-display); font-size: 20px; font-weight: 500; line-height: 1.8; color: var(--text-primary); margin-bottom: 16px; padding: 12px; border-left: 3px solid var(--purple); background: rgba(2, 6, 23, 0.35); border-radius: 6px; scrollbar-width: thin;" tabindex="0">
+            <!-- Word spans populated dynamically -->
+          </div>
+
+          <!-- Custom Text / Lyrics Input Panel (Initially hidden) -->
+          <div id="custom-lyrics-container" style="display: none; margin-bottom: 16px; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); padding: 16px; border-radius: 10px;">
+            <label for="custom-lyrics-input" class="form-label" style="font-size: 11px;">Paste Custom Prompt / Song Lyrics</label>
+            <textarea id="custom-lyrics-input" class="form-input" style="height: 110px; resize: vertical; font-size: 14px;" placeholder="Paste your paragraphs or music lyrics here to practice..."></textarea>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <button id="btn-cancel-custom" class="coach-btn" style="padding: 6px 14px; font-size: 12px;">Cancel</button>
+              <button id="btn-load-custom" class="coach-btn primary-coach-btn" style="padding: 6px 14px; font-size: 12px; box-shadow: none;">Load Text</button>
+            </div>
+          </div>
+
+          <div class="prompt-tips-box">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="var(--purple)" style="display:inline-block; vertical-align:middle; margin-right:6px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            <strong>Speaking Tip:</strong> <span id="prompt-tips">Focus on a calm, structured pace. Accentuate key verbs like "great work" and "love" to show passion.</span>
+          </div>
+          <!-- COMPACT RECORDING INTERFACE FOR SPEECH COACH PRACTICE -->
+          <div id="coach-recorder-container" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--panel-border); flex-direction: column; gap: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="record-ring-wrapper" style="width: 50px; height: 50px; margin-bottom: 0;">
+                  <div class="pulse-ring"></div>
+                  <button id="coach-record-btn" class="record-btn" style="width: 38px; height: 38px;" aria-label="Start Recording" title="Start Recording">
+                    <svg viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                      <circle cx="12" cy="12" r="9"/>
+                    </svg>
+                  </button>
+                </div>
+                <div id="coach-timer-display" class="timer-display" style="font-size: 24px; margin-bottom: 0;">00:00.0</div>
+              </div>
+              
+              <div class="console-actions">
+                <button id="coach-pause-btn" class="console-btn pause-btn" style="padding: 6px 14px; font-size: 12px;" disabled>
+                  <svg viewBox="0 0 24 24" style="width: 12px; height: 12px;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                  Pause
+                </button>
+                <button id="coach-stop-btn" class="console-btn stop-btn" style="padding: 6px 14px; font-size: 12px;" disabled>
+                  <svg viewBox="0 0 24 24" style="width: 12px; height: 12px;"><path d="M6 6h12v12H6z"/></svg>
+                  Finish
+                </button>
+              </div>
+            </div>
+            
+            <div class="grid-2">
+              <div>
+                <div class="panel-title" style="font-size: 10px; margin-bottom: 4px;">Wave & FFT</div>
+                <canvas id="coach-visualizer-canvas" class="visualizer-canvas" style="height: 80px;" width="400" height="80"></canvas>
+              </div>
+              <div>
+                <div class="panel-title" style="font-size: 10px; margin-bottom: 4px;">Vocal Pitch (Hz)</div>
+                <canvas id="coach-pitch-canvas" class="visualizer-canvas" style="height: 80px;" width="400" height="80"></canvas>
+              </div>
+            </div>
+            
+            <div>
+              <div class="panel-title" style="font-size: 10px; margin-bottom: 4px;">Live Text Stream</div>
+              <div id="coach-live-transcript" class="live-transcript-box" style="height: 50px; font-size: 12px; padding: 8px 12px;"></div>
+            </div>
+          </div>
+
+          <div class="prompt-actions">
+            <button id="btn-custom-text" class="coach-btn">
+              <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/></svg>
+              Custom Text
+            </button>
+            <button id="btn-next-prompt" class="coach-btn">
+              <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm9-12v12h2V6h-2z"/></svg>
+              Next Prompt
+            </button>
+            <button id="btn-practice-prompt" class="coach-btn primary-coach-btn">
+              <svg viewBox="0 0 24 24"><path d="M12 2A10 10 0 1 0 22 12 10 10 0 0 0 12 2zm-2 14.5v-9l6 4.5z"/></svg>
+              Start Practice
+            </button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Alignment Diff Box -->
+          <div class="glass-panel accuracy-panel">
+            <div class="accuracy-score-header">
+              <h3 class="panel-title">Speech Accuracy Comparison</h3>
+              <div id="accuracy-score" class="accuracy-percent">--%</div>
+            </div>
+            <div id="diff-results" class="accuracy-diff-box" tabindex="0"></div>
+            
+            <!-- Key legend -->
+            <div style="display: flex; gap: 14px; font-size: 11px; flex-wrap: wrap;">
+              <span style="color: var(--green);"><strong style="text-shadow: 0 0 4px rgba(16,185,129,0.4);">⬤</strong> Correct</span>
+              <span style="color: var(--red);"><strong style="text-shadow: 0 0 4px rgba(239,68,68,0.4);">⬤</strong> Omitted</span>
+              <span style="color: var(--yellow);"><strong>⬤</strong> Filler/Extra</span>
+              <span style="color: var(--orange);"><strong>⬤</strong> Substitution</span>
+            </div>
+          </div>
+
+          <!-- Right Column Stacking Container -->
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <!-- Coaching Advice Suggestions -->
+            <div class="glass-panel coaching-advice-panel" style="margin: 0; flex: 1;">
+              <div class="panel-header">
+                <h3 class="panel-title">AI Coaching Insights</h3>
+              </div>
+              <div id="coach-advice" class="coaching-advice-content"></div>
+            </div>
+
+            <!-- Syllable & Stress Inspector Panel -->
+            <div id="syllable-inspector-panel" class="glass-panel syllable-panel" style="margin: 0; border-color: rgba(168, 85, 247, 0.15);">
+              <div class="panel-header">
+                <h3 class="panel-title" style="display:flex; align-items:center; gap:6px;">
+                  🗣️ Syllable & Stress Inspector
+                </h3>
+              </div>
+              <div id="syllable-inspector-content" class="syllable-inspector-content" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; min-height: 80px;">
+                <p style="font-style: italic; margin: 0; color: var(--text-secondary);">Click any word in the teleprompter or accuracy comparison to inspect its syllables, phonetic spelling, and word stress accent.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </section>
+
+      <!-- VIEW 3: SPEECH REPORT -->
+      <section id="view-speech-report" class="view-section">
+        
+        <div class="metric-grid">
+          <!-- Duration -->
+          <div class="glass-panel metric-card">
+            <div class="metric-label">Duration</div>
+            <div id="report-duration" class="metric-value">--</div>
+            <div class="metric-unit">seconds</div>
+          </div>
+          <!-- WPM -->
+          <div class="glass-panel metric-card">
+            <div class="metric-label">Speaking Pace</div>
+            <div id="report-wpm" class="metric-value">--</div>
+            <div id="report-wpm-label" class="metric-unit">WPM</div>
+          </div>
+          <!-- Average Pitch -->
+          <div class="glass-panel metric-card">
+            <div class="metric-label">Avg Pitch</div>
+            <div id="report-avg-pitch" class="metric-value">--</div>
+            <div class="metric-unit">Hz</div>
+          </div>
+          <!-- Pitch Variance -->
+          <div class="glass-panel metric-card">
+            <div class="metric-label">Pitch Variance</div>
+            <div id="report-pitch-variance" class="metric-value">--</div>
+            <div class="metric-unit">Hz</div>
+          </div>
+          <!-- Pauses Count -->
+          <div class="glass-panel metric-card">
+            <div class="metric-label">Pauses Count</div>
+            <div id="report-pauses" class="metric-value">--</div>
+            <div class="metric-unit">silent breaks</div>
+          </div>
+          <!-- Practice Accuracy -->
+          <div id="report-accuracy-card" class="glass-panel metric-card" style="display: none; border-color: rgba(168, 85, 247, 0.25);">
+            <div class="metric-label" style="color: var(--purple);">Practice Accuracy</div>
+            <div id="report-accuracy" class="metric-value" style="color: var(--purple); text-shadow: 0 0 10px rgba(168,85,247,0.3);">--</div>
+            <div class="metric-unit">percent match</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          
+          <!-- Pitch Pointer Gauge -->
+          <div class="glass-panel gauge-panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Vocal Register Gauge</h3>
+              <span id="report-register-badge" class="category-badge" style="background: rgba(6, 182, 212, 0.15); color: var(--cyan); border-color: rgba(6,182,212,0.25);">Medium</span>
+            </div>
+            
+            <div class="pitch-gauge-container">
+              <div class="pitch-track-bar">
+                <div id="pitch-pointer" class="pitch-pointer"></div>
+              </div>
+              <div class="gauge-labels">
+                <span>Deep (70 Hz)</span>
+                <span>Medium (195 Hz)</span>
+                <span>High (450 Hz)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Evaluation Report List -->
+          <div class="glass-panel evaluation-panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Delivery Assessment</h3>
+            </div>
+            
+            <div class="evaluation-grid">
+              <div class="eval-item">
+                <div class="eval-title">Speaking Velocity <span id="eval-pace-badge" class="eval-badge">Optimal</span></div>
+                <div id="eval-pace-desc" class="eval-desc">No recording loaded. Record or select a track to run assessments.</div>
+              </div>
+              <div class="eval-item purple-border">
+                <div class="eval-title">Vocal Inflection <span id="eval-inflection-badge" class="eval-badge">Natural</span></div>
+                <div id="eval-inflection-desc" class="eval-desc">No recording loaded.</div>
+              </div>
+              <div class="eval-item green-border">
+                <div class="eval-title">Vocal Resonance <span id="eval-register-badge-text" class="eval-badge">Chest</span></div>
+                <div id="eval-register-desc" class="eval-desc">No recording loaded.</div>
+              </div>
+              <div class="eval-item yellow-border">
+                <div class="eval-title">Breath & Phrasing <span id="eval-pauses-badge" class="eval-badge">Balanced</span></div>
+                <div id="eval-pauses-desc" class="eval-desc">No recording loaded.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Fluency Trend Analytics Panel -->
+        <div class="glass-panel analytics-panel" style="margin-bottom: 24px;">
+          <div class="panel-header">
+            <h3 class="panel-title">Fluency & Accuracy Trend</h3>
+            <div style="font-size: 11px; display: flex; gap: 14px; align-items: center;">
+              <span style="color: var(--cyan); display: flex; align-items: center; gap: 4px;">
+                <span style="display:inline-block; width:12px; height:3px; background:var(--cyan); border-radius:2px; box-shadow: 0 0 6px var(--cyan);"></span>
+                Speaking Pace (WPM)
+              </span>
+              <span style="color: var(--purple); display: flex; align-items: center; gap: 4px;">
+                <span style="display:inline-block; width:12px; height:3px; background:var(--purple); border-radius:2px; box-shadow: 0 0 6px var(--purple);"></span>
+                Speech Accuracy (%)
+              </span>
+            </div>
+          </div>
+          <canvas id="analytics-canvas" class="visualizer-canvas" style="height: 180px;" width="1200" height="180"></canvas>
+        </div>
+
+        <!-- Full Transcript Box -->
+        <div class="glass-panel report-transcript-panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Final Speech Transcript</h3>
+          </div>
+          <textarea id="report-transcript-text" class="report-transcript-textarea" placeholder="The speech transcript will populate here... You can edit this directly for modifications."></textarea>
+          
+          <div class="export-actions-row">
+            <button id="btn-copy-transcript" class="export-btn">
+              <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+              Copy Text
+            </button>
+            <button id="btn-pdf-report" class="export-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 10h1V8.5H9V10zm5.5 2h1V8.5h-1v3.5zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z"/></svg>
+              Print / Save PDF
+            </button>
+            <button id="btn-email-report" class="export-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              Email Report
+            </button>
+            <button id="btn-download-audio" class="export-btn download-btn">
+              <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+              Download Audio (.webm)
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Spinner Overlay while Gemini parses transcription -->
+      <div id="api-spinner-overlay" class="spinner-overlay">
+        <div class="spinner"></div>
+        <div id="spinner-status" class="spinner-text">Transcribing with Gemini 2.5 Flash...</div>
+      </div>
+
+    </main>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="modal-overlay">
+      <div class="glass-panel modal-box">
+        <div class="modal-header">
+          <h3 class="modal-title">VoxLyze Settings</h3>
+          <button id="settings-close" class="modal-close" aria-label="Close Settings">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+        
+        <div class="form-group">
+          <label class="checkbox-group">
+            <input type="checkbox" id="settings-gemini-mode">
+            <span class="checkbox-label">Enable Gemini AI Enhanced Mode</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="settings-api-key" class="form-label">Google Gemini API Key</label>
+          <input type="password" id="settings-api-key" class="form-input" placeholder="AIzaSy..." autocomplete="new-password">
+          <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-top: 4px;">
+            The Gemini API key is stored securely in your browser's local storage and used directly for transcription. You can get a key from Google AI Studio.
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="settings-cancel" class="modal-btn cancel">Cancel</button>
+          <button id="settings-save" class="modal-btn confirm">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAME RECORDING MODAL -->
+    <div id="name-modal" class="modal-overlay">
+      <div class="glass-panel modal-box">
+        <div class="modal-header">
+          <h3 class="modal-title">Save Recording</h3>
+        </div>
+        
+        <div class="form-group">
+          <label for="recording-name-input" class="form-label">Session Name</label>
+          <input type="text" id="recording-name-input" class="form-input" placeholder="e.g. Presentation Pitch Run 1" required>
+        </div>
+
+        <div class="modal-actions">
+          <button id="name-cancel" class="modal-btn cancel">Discard</button>
+          <button id="name-save" class="modal-btn confirm">Save Recording</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOCAL WARM-UP MODAL -->
+    <div id="warmup-modal" class="modal-overlay">
+      <div class="glass-panel modal-box warmup-box" style="max-width: 650px; width: 90%; border-color: rgba(168, 85, 247, 0.25);">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 12px; margin-bottom: 16px;">
+          <h3 class="modal-title" style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:20px;">🎮</span> Vocal Pitch Warm-Up Game
+          </h3>
+          <button id="warmup-close" class="modal-close" aria-label="Close Warm-up">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+        
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin-bottom:14px;">
+          Match your vocal pitch (glowing <strong style="color:var(--purple); text-shadow:0 0 4px var(--purple);">purple line</strong>) to the moving target path (glowing <strong style="color:var(--cyan); text-shadow:0 0 4px var(--cyan);">cyan sine wave</strong>) by humming or singing into the microphone!
+        </div>
+
+        <!-- Canvas visualizer -->
+        <div style="position:relative; background:rgba(2, 6, 23, 0.4); border:1px solid var(--panel-border); border-radius:8px; overflow:hidden; margin-bottom:16px;">
+          <canvas id="warmup-canvas" width="600" height="250" style="display:block; width:100%; height:250px;"></canvas>
+          
+          <!-- Large Overlay Stats -->
+          <div style="position:absolute; top:12px; right:16px; text-align:right;">
+            <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Warmup Match Score</div>
+            <div id="warmup-score" style="font-size:28px; font-weight:700; color:var(--cyan); text-shadow:0 0 8px rgba(6,182,212,0.4);">0%</div>
+          </div>
+
+          <div style="position:absolute; top:12px; left:16px; pointer-events: none;">
+            <div id="warmup-feedback" style="font-size:12px; font-weight:600; color:var(--text-primary);">Hum to start tracing!</div>
+            <div id="warmup-frequency" style="font-size:11px; font-family:monospace; color:var(--text-secondary); margin-top:2px;">Target: -- Hz | User: -- Hz</div>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="justify-content:space-between; align-items:center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 14px; margin-top: 4px;">
+          <div style="font-size:12px; color:var(--text-secondary);">
+            Vocal register: <span id="warmup-register" style="font-weight:600; color:var(--purple);">--</span>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button id="warmup-reset-btn" class="coach-btn" style="padding: 8px 16px;">Reset</button>
+            <button id="warmup-start-btn" class="coach-btn primary-coach-btn" style="padding: 8px 20px; box-shadow:none; background: var(--purple); color:#fff; border-color: rgba(168,85,247,0.3);">Start Game</button>
+          </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LOAD MAIN SCRIPT -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
